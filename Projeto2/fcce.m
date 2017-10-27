@@ -12,9 +12,9 @@ if(ndims(im) == 2)
 %Converte pra tons de cinza apesar de no artigo dizer pra converter pra
 %hsv. Exemplos mostram que isso que foi aplicado.
 else
-    hsv = rgb2hsv(im);
-    img = hsv(:,:,3);
-%     img = rgb2gray(im);
+%     hsv = rgb2hsv(im);
+%     img = hsv(:,:,3);
+    img = rgb2gray(im);
     disp('converte cinza');
 end
 
@@ -22,6 +22,7 @@ stdDeviation = std2(img);
 [row, col] = size(img);
 disp(stdDeviation);
 figure, imhist(img);
+axis([0 250 0 inf])
 histoSize = size(imhist(img));
 similar = zeros(row, col);
 
@@ -39,8 +40,9 @@ fcf = 1 - similar;
 % disp (fcf);
 
 %FDH
-% fdh = dissimilarityHistogram(img, histoSize(1), fcf);
-%figure, plot(fdh,'bo');
+fdh = dissimilarityHistogram(img, histoSize(1), fcf);
+figure, plot(fdh,'bo');
+axis([0 250 0 300])
 % figure, histogram(fdh);
 % disp(fdh);
 
@@ -83,15 +85,17 @@ function member = membership(array, std, x, y)
             end
             %(|f (x, y) − f (u, v)|)
             diff = abs(array(x,y)-array(u,v));
-            disp('diff');
-            disp(diff);
+%             disp('diff');
+%             disp(diff);
             %(|f (x, y) − f (u, v)|/ σ)
-            norm = diff/std;
-            disp('norm');
-            disp(norm);
-            disp(std);
+            norm = double(diff)/double(std);
+%             disp('norm');
+%             disp(norm);
+%             disp(std);
             %(1 − |f (x, y) − f (u, v)|/ σ)
             compl = 1 - norm;
+%             disp('compl');
+%             disp(compl)
             %max (1 − |f (x, y) − f (u, v)|/ σ, 0)
             mi = max(compl, 0);
             sumj = sumj + mi;
