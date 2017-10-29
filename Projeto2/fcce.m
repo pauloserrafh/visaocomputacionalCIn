@@ -1,6 +1,7 @@
-function fcce(path)
+function r = fcce(path)
 im = imread(path);
-
+file1 = fopen('fst.txt','w');
+file2 = fopen('scd.txt','w');
 
 %Se imagem em tons de cinza, nao precisa realizar operacoes
 if(ndims(im) == 2)
@@ -15,19 +16,22 @@ else
 %     hsv = rgb2hsv(im);
 %     img = hsv(:,:,3);
     img = rgb2gray(im);
-    disp('converte cinza');
+%     disp('converte cinza');
+%     disp(img);
+    fprintf(file1, '%d\n',img);
 end
-
+figure, imshow(img);
 stdDeviation = std2(img);
 [row, col] = size(img);
-disp(stdDeviation);
+% disp(stdDeviation);
 figure, imhist(img);
 axis([0 250 0 inf])
 histoSize = size(imhist(img));
 similar = zeros(row, col);
+g = zeros(row, col);
 
 %Calcula similaridade
-    %Percorre cada pixel da matriz
+%Percorre cada pixel da matriz
 for i=1:row
     for j=1:col
         similar(i, j) = membership(img, stdDeviation, i, j);
@@ -45,11 +49,52 @@ figure, plot(fdh,'bo');
 axis([0 250 0 300])
 % figure, histogram(fdh);
 % disp(fdh);
+% disp(size(fdh));
 
-%CACE
+%Normaliza fdh
+total = sum(fdh);
+% disp(fdh);
+% disp(total);
+pfd = zeros(size(fdh));
+% disp(size(pfd));
+for i=1:size(pfd,2)
+    pfd(i) = double(fdh(i))/double(total);
+end
+% disp(pfd);
+%CDF
+cfd = cumulativeDistribution(pfd);
+% disp(cfd);
+
+%Reconstroi imagem
+%sk = s_0 + (s_(l-1) - s0)cfd(rk)
+%s_0 = 0; s_(l-1) = 255
+% disp(row);
+% disp(col);
+for i=1:row
+    for j=1:col
+        %Indice comeca em 1 e nivel de intensidade da imagem comeca em 0
+        g(i,j) = uint8(255*cfd(img(i,j)+1));
+    end
+end
+fprintf(file2, '%d\n',g);
+disp(g);
+figure, imshow(g);
+figure, imhist(g);
+r = g;
+
 end
 
-%apenas para imagem em tons de cinza
+function cfd = cumulativeDistribution(pfd)
+    [row, col] = size(pfd);
+    cumulative = zeros(row, col);
+    cumulative(1) = pfd(1);
+    for i=2:col
+        cumulative(i) = cumulative(i-1) + pfd(i);
+    end
+%     disp(cumulative);
+    cfd = cumulative;
+end
+
 function fdh = dissimilarityHistogram(im, levels, fcf)
     dissimilar = zeros(1, levels);
     [row, col] = size(im);
@@ -60,8 +105,7 @@ function fdh = dissimilarityHistogram(im, levels, fcf)
             dissimilar(level+1) = dissimilar(level+1) + fcf(i,j);
         end
     end
-    fdh = dissimilar;
-     
+    fdh = uint8(dissimilar);
 end
 
 function member = membership(array, std, x, y)
