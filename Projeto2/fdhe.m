@@ -152,19 +152,12 @@ function member = membership(array, std, x, y)
     for i=-1:1
         sumj = 0;
         u = x+i;
-        %Garante que nao ira passar da borda da imagem
-        if(u > size(array,1))
-            u = size(array,1);
-        elseif (u < 1)
-            u = 1;
-        end
         for j=-1:1            
             v = y+j;
-            %Garante que nao ira passar da borda da imagem
-            if(v > size(array,2))
-                v = size(array,2);
-            elseif (v < 1)
-                v = 1;                       
+            % Garante que nao ira passar da borda da imagem. Considera
+            % elementos após as bordas como 0.
+            if(u > size(array,1) || u < 1 || v > size(array,2) || v < 1)
+                continue
             end
             %(|f (x, y) − f (u, v)|)
             diff = abs(array(x,y)-array(u,v));
