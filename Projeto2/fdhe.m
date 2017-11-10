@@ -25,7 +25,7 @@ stdDeviation = std2(img);
 [row, col] = size(img);
 % disp(stdDeviation);
 figure, imhist(img); %figure2
-axis([0 300 0 9000])
+axis([0 inf 0 9000]);
 histoSize = size(imhist(img));
 similar = zeros(row, col);
 g = zeros(row, col);
@@ -48,8 +48,8 @@ fcf = 1 - similar;
 
 %%%%%%%%%%%%%%%%% FDH %%%%%%%%%%%%%%%%%
 fdh = dissimilarityHistogram(img, histoSize(1), fcf);
-figure, plot(fdh,'bo'); %figure 3
-axis([0 300 0 1000]);
+figure, bar(fdh,1,'hist'); %figure 3
+axis([0 inf 0 1000]);
 % figure, histogram(fdh);
 % disp(fdh);
 % disp(size(fdh));
@@ -94,9 +94,9 @@ for i=1:row
     end
 end
 
-% hi = generateHistogram(g);
-% figure, plot(hi,'bo'); %figure 4
-% axis([0 300 0 inf]);
+hi = generateHistogram(g);
+figure, bar(hi,1,'hist'); %figure 4
+axis([0 inf 0 9000]);
 % disp(hi);
 
 % fprintf(file2, '%d\n',g);
@@ -108,29 +108,17 @@ r = g;
 
 end
 
-% function h = generateHistogram(matrix)
-%     array = zeros(1, 256);
-%     [row, col] = size(matrix);
-%     for i=1:row
-%         for j=1:col
-%         value = matrix(i, j) + 1;
-%         array(value) = array(value) + 1;
-%         end
-%     end
-%     h = array;
-% end
-
-% function cfd = cumulativeDistribution(pfd)
-%     [row, col] = size(pfd);
-%     cumulative = zeros(row, col);
-%     cumulative(1) = pfd(1);
-% %     disp(pfd);
-%     for i=2:col
-%         cumulative(i) = cumulative(i-1) + pfd(i);
-%     end
-% %     disp(cumulative);
-%     cfd = cumulative;
-% end
+function h = generateHistogram(matrix)
+    array = zeros(1, 256);
+    [row, col] = size(matrix);
+    for i=1:row
+        for j=1:col
+        value = uint8(matrix(i, j) + 1);
+        array(value) = array(value) + 1;
+        end
+    end
+    h = array;
+end
 
 function fdh = dissimilarityHistogram(im, levels, fcf)
     dissimilar = zeros(1, levels);
