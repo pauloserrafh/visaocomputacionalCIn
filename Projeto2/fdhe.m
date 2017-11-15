@@ -5,28 +5,35 @@ im = imread(path);
 
 %Se imagem em tons de cinza, nao precisa realizar operacoes
 if(ndims(im) == 2)
+    isColor = false;
     img = im;
-    disp('nao converte');
+    disp('Imagem cinza');
 
-%Se imagem RGB, transformar em hsv e calcular desvio padrao da luminancia
-%(v)
-%Converte pra tons de cinza apesar de no artigo dizer pra converter pra
-%hsv. Exemplos mostram que isso que foi aplicado.
+%Se imagem RGB, transformar em hsv e trabalhar com a luminancia (v)
 else
-%     hsv = rgb2hsv(im);
-%     img = hsv(:,:,3);
-    img = rgb2gray(im);
-%     disp('converte cinza');
+    isColor = true;
+    imhsv = rgb2hsv(im);
+    img2 = imhsv(:,:,3);
+%     img = rgb2gray(im);
+    img = uint8(255*img2);
+    disp('Imagem colorida');
 %     disp(img);
 end
+
 % fprintf(file1, '%d\n',img);
-figure, imshow(img); %figure1
+figure, imshow(img);
+title('Imagem Original');
+
 stdDeviation = std2(img);
 [row, col] = size(img);
 % disp(stdDeviation);
-figure, imhist(img); %figure2
+
+figure, imhist(img);
 axis([0 inf 0 9000]);
-histoSize = size(imhist(img));
+title('Histograma Imagem Original');
+
+histo = imhist(img);
+histoSize = size(histo);
 similar = zeros(row, col);
 g = zeros(row, col);
 
@@ -48,8 +55,9 @@ fcf = 1 - similar;
 
 %%%%%%%%%%%%%%%%% FDH %%%%%%%%%%%%%%%%%
 fdh = dissimilarityHistogram(img, histoSize(1), fcf);
-figure, bar(fdh,1,'hist'); %figure 3
+figure, bar(fdh,1,'hist');
 axis([0 inf 0 1000]);
+title('Histograma Dissimilaridade Fuzzy');
 % figure, histogram(fdh);
 % disp(fdh);
 % disp(size(fdh));
@@ -88,28 +96,127 @@ s = sk;
 for i=1:row
     for j=1:col
         %Indice comeca em 1 e nivel de intensidade da imagem comeca em 0
-        intensidade = cfd(img(i,j)+1);
-%         g(i,j) = abs(img(i,j)-(255*intensidade));
-        g(i,j) = (255*intensidade);
+%         intensidade = cfd(img(i,j)+1);
+% %         g(i,j) = abs(img(i,j)-(255*intensidade));
+%         g(i,j) = (255*intensidade);
+        g(i,j) = sk(img(i,j)+1);
     end
 end
 
-hi = generateHistogram(g);
-figure, bar(hi,1,'hist'); %figure 4
-axis([0 inf 0 9000]);
-% disp(hi);
+if(~isColor)
+    out = uint8(g);
+    figure,imshow(out);
+    title('Imagem Melhorada');
+    figure, imhist(out);
+    axis([0 inf 0 9000]);
+    title('Histograma Imagem Melhorada');
 
-% fprintf(file2, '%d\n',g);
-% disp(g);
-% imwrite(g, 'saida.jpg');
-figure, imshow(g);
-% figure, imhist(g);
-r = g;
+    hi = generateHistogram(g);
+    % figure, bar(hi,1,'hist'); %figure 4
+    % axis([0 inf 0 9000]);
+    % title('Histograma Imagem Melhorada');
+    % disp(hi);
+
+    % fprintf(file2, '%d\n',g);
+    % disp(g);
+    % imwrite(g, 'saida.jpg');
+    % figure, imshow(g);
+    % title('Imagem Melhorada');
+    % figure, imhist(g);
+    r = out;
+else
+
+    newV = g/255;
+%     disp(newV);
+    imhsv(:,:,3) = newV;
+    newRGB = hsv2rgb(imhsv);
+    figure, imshow(newRGB);
+    title('Imagem Melhorada');
+    figure, imhist(newRGB);
+    axis([0 inf 0 9000]);
+    title('Histograma Imagem Melhorada');
+
+%     hi = generateHistogram(g);
+    % figure, bar(hi,1,'hist'); %figure 4
+    % axis([0 inf 0 9000]);
+    % title('Histograma Imagem Melhorada');
+    % disp(hi);
+
+    % fprintf(file2, '%d\n',g);
+    % disp(g);
+    % imwrite(g, 'saida.jpg');
+    % figure, imshow(g);
+    % title('Imagem Melhorada');
+    % figure, imhist(g);
+%     r = out;
 
 end
 
+%%%%%%%%%%%%%%%%% Calcula Entropia Discreta Normalizada %%%%%%%%%%%%%%%%%
+
+% Normaliza histograma da imagem original
+totalOriginal = sum(histo);
+% disp(totalOriginal);
+normalOriginal = zeros(size(histo));
+for i=1:size(normalOriginal,1)
+    normalOriginal(i) = double(histo(i))/double(totalOriginal);
+end
+% disp(normalOriginal);
+original = discreteEntropy(normalOriginal);
+disp(original);
+
+% Normaliza histograma da imagem melhorada
+totalMelhorada = sum(hi);
+% disp(totalMelhorada);
+normalMelhorada = zeros(size(hi));
+for i=1:size(normalMelhorada,1)
+    normalMelhorada(i) = double(hi(i))/double(totalMelhorada);
+end
+% disp(normalMelhorada);
+melhorado = discreteEntropy(normalMelhorada);
+disp(melhorado);
+
+logMax = log(256);
+diffOriginal = logMax - original;
+diffMelhorado = logMax - melhorado;
+razao = double(diffMelhorado)/double(diffOriginal);
+den = 1/(1+razao);
+disp('Entropia discreta normalizada');
+disp(den);
+
+logMax2 = log2(256);
+entropiaO = entropy(img);
+% disp(entropiaO);
+entropiaM = entropy(out);
+% disp(entropiaM);
+
+diffO = logMax2 - entropiaO;
+diffM = logMax2 - entropiaM;
+razao2 = double(diffM)/double(diffO);
+den2 = 1/(1+razao2);
+
+razao3 = entropiaM/logMax2;
+denominador = logMax2 - razao3 - entropiaO;
+den3 = 1/(1+denominador);
+
+disp(den2);
+disp(den3);
+
+end
+
+function e = discreteEntropy(histog)
+    soma = 0;
+%     disp(size(histog));
+    for i=1:256
+         %Indice comeca em 1 e nivel de intensidade da imagem comeca em 0
+        valor = histog(i)*log(i);
+        soma = soma + valor;
+    end
+    e = -soma;
+end
+
 function h = generateHistogram(matrix)
-    array = zeros(1, 256);
+    array = zeros(256, 1);
     [row, col] = size(matrix);
     for i=1:row
         for j=1:col
@@ -140,7 +247,7 @@ function member = membership(array, std, x, y)
     for i=-1:1
         sumj = 0;
         u = x+i;
-        for j=-1:1            
+        for j=-1:1
             v = y+j;
             % Garante que nao ira passar da borda da imagem. Considera
             % elementos após as bordas como 0.
