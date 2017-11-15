@@ -1,27 +1,25 @@
 function r = fcce(path)
 im = imread(path);
-file1 = fopen('fst.txt','w');
-file2 = fopen('scd.txt','w');
+% file1 = fopen('fst.txt','w');
+% file2 = fopen('scd.txt','w');
 
 %Se imagem em tons de cinza, nao precisa realizar operacoes
 if(ndims(im) == 2)
     img = im;
     disp('nao converte');
 
-%Se imagem RGB, transformar em hsv e calcular desvio padrao da luminancia
-%(v)
-%Converte pra tons de cinza apesar de no artigo dizer pra converter pra
-%hsv. Exemplos mostram que isso que foi aplicado.
-%TODO: Verificar se é preciso converter ou se as imagens house e nest
-%apenas devem ser convertidas.
+%Se imagem RGB, transformar em hsv e trabalhar com a luminancia (v)
 else
-%     hsv = rgb2hsv(im);
-%     img = hsv(:,:,3);
-    img = rgb2gray(im);
-    disp('converte cinza');
+%     isColor = true;
+    imhsv = rgb2hsv(im);
+    img2 = imhsv(:,:,3);
+%     img = rgb2gray(im);
+    img = uint8(255*img2);
+    disp('Imagem colorida');
 %     disp(img);
 end
-fprintf(file1, '%d\n',img);
+
+% fprintf(file1, '%d\n',img);
 figure, imshow(img); %figure1
 stdDeviation = std2(img);
 media = mean2(img);
@@ -40,7 +38,7 @@ contextual = zeros(row, col);
 g = zeros(row, col);
 I = zeros(row, col);
 
-%%%%%%%%%%%%%%%%%Calcula similaridade%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%% Calcula similaridade %%%%%%%%%%%%%%%%%
 %Percorre cada pixel da matriz
 for i=1:row
     for j=1:col
@@ -58,7 +56,7 @@ fcf = 1 - similar;
 % disp(contextual);
 % disp (fcf);
 
-%%%%%%%%%%%%%%%%%FDH%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%% FDH %%%%%%%%%%%%%%%%%
 fdh = dissimilarityHistogram(img, histoSize(1), fcf);
 figure, plot(fdh,'bo'); %figure 3
 axis([0 250 0 300]);
@@ -66,7 +64,7 @@ axis([0 250 0 300]);
 % disp(fdh);
 % disp(size(fdh));
 
-%%%%%%%%%%%%Normaliza fdh%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%% Normaliza fdh %%%%%%%%%%%%%%%%%
 total = sum(fdh);
 % disp(fdh);
 % disp(total);
@@ -76,13 +74,13 @@ for i=1:size(pfd,2)
     pfd(i) = double(fdh(i))/double(total);
 end
 % disp(pfd);
-%%%%%%%%%%%%%%%%%%CDF%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%% CDF %%%%%%%%%%%%%%%%%
 cfd = cumulativeDistribution(pfd);
 % disp(cfd);
 
-%%%%%%%%%%%%%%%%%Reconstroi imagem fdhe%%%%%%%%%%%%%%%%%
-%sk = s_0 + (s_(l-1) - s0)cfd(rk)
-%s_0 = 0; s_(l-1) = 255
+%%%%%%%%%%%%%%%%% Reconstroi imagem fdhe %%%%%%%%%%%%%%%%%
+%sk = s0 + (s_(l-1) - s0)cfd(rk)
+%s0 = 0; s_(l-1) = 255
 % disp(row);
 % disp(col);
 for i=1:row
@@ -92,7 +90,7 @@ for i=1:row
     end
 end
 
-%%%%%%%%%%%%%%%%%Reconstroi imagem fcce%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%% Reconstroi imagem fcce %%%%%%%%%%%%%%%%%
 for i=1:row
     for j=1:col
         %Indice comeca em 1 e nivel de intensidade da imagem comeca em 0
