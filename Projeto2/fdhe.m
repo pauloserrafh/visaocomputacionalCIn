@@ -31,7 +31,6 @@ figure, bar(histo,1,'hist');
 axis([0 inf 0 9000]);
 title('Histograma Imagem Original');
 
-histo = imhist(img);
 histoSize = size(histo);
 similar = zeros(row, col);
 g = zeros(row, col);
@@ -132,7 +131,8 @@ else
     figure, imshow(newRGB);
     title('Imagem Melhorada');
 %     figure, imhist(newRGB);
-    histo = imhist(newRGB);
+%     histo = imhist(newRGB);
+    histo = imhist(out);
     figure, bar(histo,1,'hist');
     axis([0 inf 0 9000]);
     title('Histograma Imagem Melhorada');
@@ -179,8 +179,8 @@ function fdh = dissimilarityHistogram(im, levels, fcf)
         end
     end
 %     disp(dissimilar);
-    fdh = dissimilar;
-%     fdh = uint8(dissimilar);
+%     fdh = dissimilar;
+    fdh = uint8(dissimilar);
 end
 
 function member = membership(array, std, x, y)
